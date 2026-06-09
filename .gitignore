@@ -1,0 +1,8 @@
+# Helm dependency artifacts (resolved at apply time by the ArgoCD repo-server)
+charts/*/charts/
+charts/*/Chart.lock
+
+# Local
+.DS_Store
+.idea/
+.vscode/
