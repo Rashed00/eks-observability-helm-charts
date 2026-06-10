@@ -1,0 +1,7 @@
+# CI-only values: replace the production ACCOUNT_ID placeholder so `helm template`
+# renders a manifest that kubeconform can validate.
+kube-prometheus-stack:
+  prometheus:
+    serviceAccount:
+      annotations:
+        eks.amazonaws.com/role-arn: "arn:aws:iam::000000000000:role/observability-cluster-thanos"

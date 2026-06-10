@@ -1,0 +1,118 @@
+# kube-prometheus-stack values for the observability hub cluster.
+#
+# The IRSA role ARN for Prometheus' service account points at the role created
+# by Terraform (cluster_name + "-thanos") - Prometheus uses the same role as
+# Thanos because the Thanos sidecar runs in the Prometheus pod and uploads
+# blocks to S3. Replace the dummy AWS account ID before tagging a release.
+
+kube-prometheus-stack:
+  fullnameOverride: prometheus
+
+  prometheus:
+    serviceAccount:
+      create: true
+      annotations:
+        eks.amazonaws.com/role-arn: "arn:aws:iam::000000000000:role/observability-cluster-thanos"
+
+    prometheusSpec:
+      replicas: 1
+      retention: 6h
+      retentionSize: "10GB"
+      enableRemoteWriteReceiver: true
+
+      externalLabels:
+        cluster: observability
+        environment: production
+
+      # Allow slight time drift from spoke clusters during remote_write.
+      tsdb:
+        outOfOrderTimeWindow: 30m
+
+      # Thanos sidecar uploads completed blocks to S3.
+      thanos:
+        objectStorageConfig:
+          existingSecret:
+            name: thanos-objstore-config
+            key: objstore.yml
+
+      storageSpec:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: gp3
+            resources:
+              requests:
+                storage: 20Gi
+
+      resources:
+        requests:
+          cpu: 1000m
+          memory: 8Gi
+        limits:
+          cpu: 4000m
+          memory: 16Gi
+
+      # WAL replay with historical blocks can take 60-90s.
+      maximumStartupDurationSeconds: 600
+
+      containers:
+        - name: prometheus
+          startupProbe:
+            httpGet: { path: /-/ready, port: http-web, scheme: HTTP }
+            failureThreshold: 60
+            periodSeconds: 5
+            timeoutSeconds: 10
+          livenessProbe:
+            httpGet: { path: /-/healthy, port: http-web, scheme: HTTP }
+            initialDelaySeconds: 0
+            failureThreshold: 10
+            periodSeconds: 30
+            timeoutSeconds: 30
+          readinessProbe:
+            httpGet: { path: /-/ready, port: http-web, scheme: HTTP }
+            initialDelaySeconds: 0
+            failureThreshold: 10
+            periodSeconds: 30
+            timeoutSeconds: 30
+
+    # Exemplars link metrics to traces in Grafana.
+    exemplars:
+      enabled: true
+
+  alertmanager:
+    enabled: true
+    alertmanagerSpec:
+      replicas: 1
+      storage:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: gp3
+            resources:
+              requests:
+                storage: 5Gi
+      resources:
+        requests:
+          cpu: 50m
+          memory: 128Mi
+        limits:
+          cpu: 200m
+          memory: 512Mi
+
+  # Grafana is deployed separately via the grafana-operator + grafana-instance charts.
+  grafana:
+    enabled: false
+
+  kubeStateMetrics:
+    enabled: true
+
+  nodeExporter:
+    enabled: true
+
+  prometheusOperator:
+    enabled: true
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
