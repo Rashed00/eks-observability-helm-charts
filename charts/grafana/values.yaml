@@ -1,0 +1,91 @@
+# Grafana values for the observability hub cluster.
+#
+# Note: in our setup the Grafana CR (gitops repo, manifests/grafana/instance)
+# is what's actually deployed. This chart is kept as an alternative for
+# clusters where the operator is not used. If you're following the default
+# path, ArgoCD does NOT install this chart - it installs grafana-operator
+# instead and the Grafana CR provisions the same workload.
+#
+# Replace monitoring.example.com and the dummy AWS account ID before release.
+
+grafana:
+  replicas: 1
+
+  # Use External Secrets to inject admin creds.
+  admin:
+    existingSecret: grafana-credentials
+    userKey: admin-user
+    passwordKey: admin-password
+
+  persistence:
+    enabled: true
+    storageClassName: efs-sc
+    size: 10Gi
+    accessModes: [ReadWriteMany]
+
+  initChownData:
+    enabled: false
+
+  securityContext:
+    runAsUser: 472
+    runAsGroup: 472
+    fsGroup: 472
+
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: Prometheus
+          type: prometheus
+          url: http://thanos-query-frontend.observability.svc.cluster.local:9090
+          isDefault: true
+          jsonData:
+            httpMethod: POST
+            timeInterval: "15s"
+            exemplarTraceIdDestinations:
+              - { name: traceID, datasourceUid: tempo }
+        - name: Loki
+          type: loki
+          url: http://loki-gateway.observability.svc.cluster.local:80
+          jsonData:
+            derivedFields:
+              - { name: TraceID, matcherRegex: "traceID=(\w+)", url: "${__value.raw}", datasourceUid: tempo }
+        - name: Tempo
+          type: tempo
+          uid: tempo
+          url: http://tempo.observability.svc.cluster.local:3200
+          jsonData:
+            httpMethod: GET
+            tracesToLogsV2:
+              datasourceUid: Loki
+              filterByTraceID: true
+            tracesToMetrics:
+              datasourceUid: Prometheus
+            serviceMap:
+              datasourceUid: Prometheus
+            nodeGraph:
+              enabled: true
+
+  plugins:
+    - grafana-piechart-panel
+    - grafana-clock-panel
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits:   { cpu: 500m, memory: 1Gi }
+
+  grafana.ini:
+    server:
+      root_url: "https://grafana.monitoring.example.com"
+      domain: "grafana.monitoring.example.com"
+    feature_toggles:
+      enable: traceqlEditor correlations
+    unified_alerting:
+      enabled: true
+    analytics:
+      reporting_enabled: false
+      check_for_updates: false

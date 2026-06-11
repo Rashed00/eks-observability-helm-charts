@@ -1,0 +1,5 @@
+grafana:
+  grafana.ini:
+    server:
+      root_url: "https://grafana.monitoring.example.com"
+      domain: "grafana.monitoring.example.com"

@@ -1,0 +1,10 @@
+apiVersion: v2
+name: grafana
+description: Grafana (alternative to the operator-managed instance).
+type: application
+version: 1.0.0
+appVersion: "10.3.1"
+dependencies:
+  - name: grafana
+    version: "10.3.1"
+    repository: "https://grafana.github.io/helm-charts"
