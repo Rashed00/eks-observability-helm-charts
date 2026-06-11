@@ -1,0 +1,39 @@
+# Tempo (monolithic mode) values for the observability hub cluster.
+# S3 bucket + IRSA role are created by eks-observability-iac.
+# Replace the dummy AWS account ID and bucket name before release.
+
+tempo:
+  tempo:
+    storage:
+      trace:
+        backend: s3
+        s3:
+          bucket: observability-cluster-tempo-000000000000
+          endpoint: s3.eu-central-1.amazonaws.com
+          region: eu-central-1
+          insecure: false
+
+    # Generate RED metrics from spans and remote_write them to Prometheus.
+    metricsGenerator:
+      enabled: true
+      remoteWriteUrl: http://prometheus-operated.observability.svc.cluster.local:9090/api/v1/write
+
+    compactor:
+      compaction:
+        block_retention: 336h  # 14 days
+
+  reportingEnabled: false
+
+  traces:
+    otlp:
+      grpc: { enabled: true }
+      http: { enabled: true }
+
+  serviceAccount:
+    create: true
+    annotations:
+      eks.amazonaws.com/role-arn: "arn:aws:iam::000000000000:role/observability-cluster-tempo"
+
+  resources:
+    requests: { cpu: 200m, memory: 512Mi }
+    limits:   { cpu: 1000m, memory: 2Gi }

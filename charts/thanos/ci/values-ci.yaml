@@ -1,0 +1,26 @@
+thanos:
+  objstoreConfig:
+    type: S3
+    config:
+      bucket: ci-thanos
+      endpoint: s3.eu-central-1.amazonaws.com
+      region: eu-central-1
+  query:
+    serviceAccount:
+      annotations:
+        eks.amazonaws.com/role-arn: "arn:aws:iam::000000000000:role/observability-cluster-thanos"
+  storegateway:
+    serviceAccount:
+      annotations:
+        eks.amazonaws.com/role-arn: "arn:aws:iam::000000000000:role/observability-cluster-thanos"
+  compactor:
+    serviceAccount:
+      annotations:
+        eks.amazonaws.com/role-arn: "arn:aws:iam::000000000000:role/observability-cluster-thanos"
+  bucketweb:
+    serviceAccount:
+      annotations:
+        eks.amazonaws.com/role-arn: "arn:aws:iam::000000000000:role/observability-cluster-thanos"
+  serviceAccount:
+    annotations:
+      eks.amazonaws.com/role-arn: "arn:aws:iam::000000000000:role/observability-cluster-thanos"
