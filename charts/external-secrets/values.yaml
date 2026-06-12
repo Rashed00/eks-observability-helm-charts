@@ -1,0 +1,58 @@
+# External Secrets Operator
+# IRSA role created by eks-observability-iac.
+# Replace the dummy AWS account ID before tagging a release.
+
+external-secrets:
+  installCRDs: true
+
+  serviceAccount:
+    create: true
+    name: external-secrets
+    annotations:
+      eks.amazonaws.com/role-arn: "arn:aws:iam::000000000000:role/observability-cluster-external-secrets"
+
+  replicaCount: 1
+  resources:
+    requests: { cpu: 10m, memory: 64Mi }
+    limits:   { memory: 256Mi }
+
+  webhook:
+    create: true
+    certCheckInterval: 5m
+    replicaCount: 1
+    resources:
+      requests: { cpu: 10m, memory: 64Mi }
+      limits:   { memory: 128Mi }
+
+  certController:
+    create: true
+    requeueInterval: 5m
+    resources:
+      requests: { cpu: 10m, memory: 64Mi }
+      limits:   { memory: 128Mi }
+
+  metrics:
+    service:
+      enabled: true
+      port: 8080
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 65534
+    runAsGroup: 65534
+    fsGroup: 65534
+
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop: [ALL]
+
+  extraEnv:
+    - { name: LOG_LEVEL, value: info }
+
+  nodeSelector:
+    kubernetes.io/os: linux

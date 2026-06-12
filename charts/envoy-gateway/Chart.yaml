@@ -1,0 +1,11 @@
+apiVersion: v2
+name: envoy-gateway
+description: Envoy Gateway (umbrella over the upstream chart). Kubernetes Gateway API implementation.
+type: application
+version: 1.0.0
+appVersion: "v1.2.2"
+dependencies:
+  - name: gateway-helm
+    version: "v1.2.2"
+    repository: "oci://docker.io/envoyproxy"
+    alias: gateway-helm

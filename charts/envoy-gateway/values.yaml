@@ -1,0 +1,34 @@
+# Envoy Gateway = the Gateway API implementation we use for all in-cluster
+# routing. The Gateway/HTTPRoute/SecurityPolicy CRs themselves live in the
+# gitops repo (manifests/gateway-api/).
+
+gateway-helm:
+  deployment:
+    envoyGateway:
+      replicas: 1
+      resources:
+        limits:   { memory: 512Mi, cpu: 500m }
+        requests: { cpu: 100m, memory: 256Mi }
+
+  config:
+    envoyGateway:
+      gateway:
+        controllerName: gateway.envoyproxy.io/gatewayclass-controller
+      provider:
+        type: Kubernetes
+        kubernetes:
+          # Expose Envoy via an internet-facing NLB. The ACM cert ARN is
+          # patched onto the Service in manifests/gateway-api/envoyproxy.yaml.
+          envoyService:
+            type: LoadBalancer
+            annotations:
+              service.beta.kubernetes.io/aws-load-balancer-type: "external"
+              service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "ip"
+              service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+              service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+              service.beta.kubernetes.io/aws-load-balancer-healthcheck-protocol: "http"
+              service.beta.kubernetes.io/aws-load-balancer-healthcheck-port: "traffic-port"
+              service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "http"
+      logging:
+        level:
+          default: info
