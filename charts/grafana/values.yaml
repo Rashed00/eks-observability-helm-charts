@@ -49,7 +49,7 @@ grafana:
           url: http://loki-gateway.observability.svc.cluster.local:80
           jsonData:
             derivedFields:
-              - { name: TraceID, matcherRegex: "traceID=(\w+)", url: "${__value.raw}", datasourceUid: tempo }
+              - { name: TraceID, matcherRegex: 'traceID=(\w+)', url: "${__value.raw}", datasourceUid: tempo }
         - name: Tempo
           type: tempo
           uid: tempo
