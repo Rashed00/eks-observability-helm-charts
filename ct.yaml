@@ -1,0 +1,6 @@
+# chart-testing config (used by the optional `ct` CLI; CI runs helm lint
+# directly today but ct.yaml is here for future use).
+chart-dirs:
+  - charts
+helm-extra-args: --timeout 600s
+target-branch: main

@@ -1,0 +1,119 @@
+# Thanos values for the observability hub cluster.
+# Reads S3 blocks uploaded by the Prometheus sidecar, exposes them via the
+# Thanos query stack, and runs compaction/downsampling.
+
+thanos:
+  # Bitnami moved older Thanos images to bitnamilegacy.
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/thanos
+    tag: 0.39.2-debian-12-r2
+
+  objstoreConfig:
+    type: S3
+    config:
+      bucket: observability-cluster-thanos-000000000000
+      endpoint: s3.eu-central-1.amazonaws.com
+      region: eu-central-1
+      insecure: false
+
+  query:
+    enabled: true
+    replicaCount: 1
+    serviceAccount:
+      create: true
+      annotations:
+        eks.amazonaws.com/role-arn: "arn:aws:iam::000000000000:role/observability-cluster-thanos"
+    dnsDiscovery:
+      enabled: true
+      sidecarsService: prometheus-operated
+      sidecarsNamespace: observability
+    stores:
+      - dnssrv+_grpc._tcp.thanos-storegateway.observability.svc.cluster.local
+    replicaLabel:
+      - prometheus_replica
+      - replica
+    resources:
+      requests: { cpu: 25m, memory: 64Mi }
+      limits:   { cpu: 500m, memory: 512Mi }
+
+  storegateway:
+    enabled: true
+    replicaCount: 1
+    serviceAccount:
+      create: true
+      annotations:
+        eks.amazonaws.com/role-arn: "arn:aws:iam::000000000000:role/observability-cluster-thanos"
+    persistence:
+      enabled: true
+      storageClass: gp3
+      size: 10Gi
+    resources:
+      requests: { cpu: 25m, memory: 128Mi }
+      limits:   { cpu: 500m, memory: 1Gi }
+
+  compactor:
+    enabled: true
+    replicaCount: 1
+    serviceAccount:
+      create: true
+      annotations:
+        eks.amazonaws.com/role-arn: "arn:aws:iam::000000000000:role/observability-cluster-thanos"
+    retentionResolutionRaw: 14d
+    retentionResolution5m: 90d
+    retentionResolution1h: 730d
+    persistence:
+      enabled: true
+      storageClass: gp3
+      size: 50Gi
+    resources:
+      requests: { cpu: 25m, memory: 128Mi }
+      limits:   { cpu: 500m, memory: 1Gi }
+    extraFlags:
+      - --downsample.concurrency=1
+
+  ruler:
+    enabled: false  # Enable later for cross-cluster alerting.
+
+  queryFrontend:
+    enabled: true
+    replicaCount: 1
+    extraFlags:
+      - --query-range.max-retries-per-request=3
+      - --query-range.split-interval=24h
+      - --query-range.max-query-length=720h
+      - --query-range.max-query-parallelism=14
+      - --query-range.response-cache-max-freshness=1m
+      - --cache-compression-type=snappy
+      - |
+        --query-range.response-cache-config=
+        type: in-memory
+        config:
+          max_size: 256MB
+          max_size_items: 2048
+          validity: 6h
+    resources:
+      requests: { cpu: 25m, memory: 64Mi }
+      limits:   { cpu: 500m, memory: 512Mi }
+
+  bucketweb:
+    enabled: true
+    replicaCount: 1
+    serviceAccount:
+      create: true
+      annotations:
+        eks.amazonaws.com/role-arn: "arn:aws:iam::000000000000:role/observability-cluster-thanos"
+    resources:
+      requests: { cpu: 25m, memory: 64Mi }
+      limits:   { cpu: 200m, memory: 256Mi }
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      namespace: observability
+
+  serviceAccount:
+    create: true
+    annotations:
+      eks.amazonaws.com/role-arn: "arn:aws:iam::000000000000:role/observability-cluster-thanos"

@@ -1,0 +1,114 @@
+# Loki SimpleScalable deployment with S3 backend.
+# S3 bucket + IRSA role are created by eks-observability-iac.
+#
+# Replace the dummy AWS account ID and bucket names before tagging a release.
+
+loki:
+  # In-cluster caches were over-allocated relative to actual usage on our scale.
+  chunksCache:
+    enabled: false
+  resultsCache:
+    enabled: false
+
+  loki:
+    auth_enabled: false
+
+    ruler:
+      storage:
+        type: s3
+        s3:
+          bucketnames: observability-cluster-loki-ruler-000000000000
+          region: eu-central-1
+      rule_path: /tmp/rules
+      alertmanager_url: http://prometheus-alertmanager.observability.svc.cluster.local:9093
+      ring:
+        kvstore:
+          store: inmemory
+      enable_api: true
+      enable_alertmanager_v2: true
+
+    schemaConfig:
+      configs:
+        - from: 2025-01-01
+          store: tsdb
+          object_store: s3
+          schema: v13
+          index:
+            prefix: loki_index_
+            period: 24h
+
+    storage:
+      type: s3
+      bucketNames:
+        chunks: observability-cluster-loki-chunks-000000000000
+        ruler: observability-cluster-loki-ruler-000000000000
+      s3:
+        region: eu-central-1
+        insecure: false
+        s3ForcePathStyle: false
+
+    commonConfig:
+      replication_factor: 1
+
+    limits_config:
+      retention_period: 30d
+      max_query_parallelism: 16
+      max_query_series: 5000
+      max_entries_limit_per_query: 5000
+      max_query_length: 720h
+      query_timeout: 5m
+      max_line_size: 256KB
+      max_streams_per_user: 10000
+      split_queries_by_interval: 1h
+      ingestion_rate_mb: 8
+      ingestion_burst_size_mb: 16
+
+  deploymentMode: SimpleScalable
+
+  backend:
+    replicas: 1
+    persistence:
+      storageClass: gp3
+      size: 10Gi
+    resources:
+      requests: { cpu: 50m, memory: 128Mi }
+      limits:   { cpu: 500m, memory: 512Mi }
+    # Log-based alert rules ConfigMaps come from the gitops repo (manifests/loki/rules).
+    extraVolumes:
+      - name: rules-kubernetes
+        configMap: { name: loki-rules-kubernetes }
+      - name: rules-applications
+        configMap: { name: loki-rules-applications }
+      - name: rules-security
+        configMap: { name: loki-rules-security }
+    extraVolumeMounts:
+      - { name: rules-kubernetes,   mountPath: /etc/loki/rules/kubernetes }
+      - { name: rules-applications, mountPath: /etc/loki/rules/applications }
+      - { name: rules-security,     mountPath: /etc/loki/rules/security }
+
+  read:
+    replicas: 1
+    resources:
+      requests: { cpu: 50m, memory: 128Mi }
+      limits:   { cpu: 500m, memory: 512Mi }
+
+  write:
+    replicas: 1
+    persistence:
+      storageClass: gp3
+      size: 10Gi
+    resources:
+      requests: { cpu: 100m, memory: 256Mi }
+      limits:   { cpu: 1000m, memory: 1Gi }
+
+  gateway:
+    enabled: true
+    replicas: 1
+    resources:
+      requests: { cpu: 25m, memory: 64Mi }
+      limits:   { cpu: 200m, memory: 256Mi }
+
+  serviceAccount:
+    create: true
+    annotations:
+      eks.amazonaws.com/role-arn: "arn:aws:iam::000000000000:role/observability-cluster-loki"

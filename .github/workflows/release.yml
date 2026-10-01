@@ -1,0 +1,50 @@
+name: Release charts
+
+# Packages and publishes charts to a GitHub Pages-hosted Helm repo when a
+# chart's version is bumped on main.
+#
+# Setup steps (one-time):
+#   1. Settings -> Pages -> Source: "Deploy from a branch" -> branch: "gh-pages"
+#   2. Settings -> Actions -> General -> Workflow permissions: "Read and write"
+#
+# After the first successful release:
+#   helm repo add eks-observability https://<owner>.github.io/eks-observability-helm-charts
+#   helm repo update
+#   helm search repo eks-observability
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'charts/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: '3.16.4'
+
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.6.0
+        with:
+          charts_dir: charts
+          skip_existing: true
+        env:
+          CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,16 @@
+loki:
+  loki:
+    ruler:
+      storage:
+        s3:
+          bucketnames: ci-loki-ruler
+          region: eu-central-1
+    storage:
+      s3:
+        region: eu-central-1
+      bucketNames:
+        chunks: ci-loki-chunks
+        ruler: ci-loki-ruler
+  serviceAccount:
+    annotations:
+      eks.amazonaws.com/role-arn: "arn:aws:iam::000000000000:role/observability-cluster-loki"

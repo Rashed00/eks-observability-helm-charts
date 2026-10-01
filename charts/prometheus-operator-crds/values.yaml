@@ -1,0 +1,2 @@
+# CRDs only - no configurable values.
+prometheus-operator-crds: {}

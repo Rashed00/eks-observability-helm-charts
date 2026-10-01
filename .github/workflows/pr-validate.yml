@@ -1,0 +1,113 @@
+name: PR Validate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'charts/**'
+      - '.github/workflows/pr-validate.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-validate-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  HELM_VERSION: '3.16.4'
+  KUBECONFORM_VERSION: 'v0.6.7'
+  K8S_VERSION: '1.34.0'
+
+jobs:
+  # ----------------------------------------------------------------------------
+  # Find which charts changed so we only lint/template the affected ones.
+  # ----------------------------------------------------------------------------
+  detect-charts:
+    name: detect changed charts
+    runs-on: ubuntu-latest
+    outputs:
+      charts: ${{ steps.list.outputs.charts }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: list
+        run: |
+          changed=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- charts/ \
+            | awk -F/ '/^charts\// {print $2}' \
+            | sort -u)
+          if [[ -z "$changed" ]]; then
+            echo "No chart changes detected. Linting ALL charts."
+            changed=$(ls -1 charts/)
+          fi
+          # Emit as a JSON array for matrix strategy
+          json=$(jq -Rsc 'split("\n") | map(select(length > 0))' <<< "$changed")
+          echo "charts=$json" >> "$GITHUB_OUTPUT"
+          echo "Changed charts: $json"
+
+  # ----------------------------------------------------------------------------
+  # Lint + template each chart, validate output with kubeconform.
+  # ----------------------------------------------------------------------------
+  lint-test:
+    name: lint + template (${{ matrix.chart }})
+    needs: detect-charts
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        chart: ${{ fromJson(needs.detect-charts.outputs.charts) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: ${{ env.HELM_VERSION }}
+
+      - name: helm dependency update
+        run: helm dependency update charts/${{ matrix.chart }}
+
+      - name: helm lint
+        run: helm lint charts/${{ matrix.chart }}
+
+      - name: helm template (with CI values)
+        run: |
+          mkdir -p /tmp/rendered
+          helm template release charts/${{ matrix.chart }} \
+            -n observability \
+            --values charts/${{ matrix.chart }}/ci/values-ci.yaml \
+            > /tmp/rendered/${{ matrix.chart }}.yaml
+
+      - name: Install kubeconform
+        run: |
+          curl -fsSL -o /tmp/kc.tar.gz \
+            "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz"
+          tar -xzf /tmp/kc.tar.gz -C /tmp
+          sudo install /tmp/kubeconform /usr/local/bin/
+
+      - name: kubeconform
+        run: |
+          kubeconform \
+            -kubernetes-version "${K8S_VERSION}" \
+            -strict \
+            -ignore-missing-schemas \
+            -schema-location default \
+            -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{ .Group }}/{{ .ResourceKind }}_{{ .ResourceAPIVersion }}.json' \
+            -summary \
+            /tmp/rendered/${{ matrix.chart }}.yaml
+
+  # ----------------------------------------------------------------------------
+  # Generated charts should not ship with angle-bracket placeholders because
+  # ArgoCD consumes values.yaml directly from the chart repository.
+  # ----------------------------------------------------------------------------
+  placeholder-check:
+    name: placeholder sanity check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fail on unreplaced placeholders in chart sources
+        run: |
+          if grep -RInE '<[A-Z_]+>' charts; then
+            echo "Found unreplaced placeholders in chart sources."
+            exit 1
+          fi
