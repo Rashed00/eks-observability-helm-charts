@@ -1,0 +1,170 @@
+apiVersion: v1
+entries:
+  alloy:
+  - apiVersion: v2
+    appVersion: 1.5.0
+    created: "2026-10-01T17:43:06.441512795Z"
+    dependencies:
+    - name: alloy
+      repository: https://grafana.github.io/helm-charts
+      version: 1.5.0
+    description: Grafana Alloy for the observability hub cluster.
+    digest: a18b871ee174348bec028c9c71ac41a68a2c71a7fa6a7c6d7f598397abb5ed70
+    name: alloy
+    type: application
+    urls:
+    - https://github.com/Rashed00/eks-observability-helm-charts/releases/download/alloy-1.0.0/alloy-1.0.0.tgz
+    version: 1.0.0
+  envoy-gateway:
+  - apiVersion: v2
+    appVersion: v1.2.2
+    created: "2026-10-01T17:43:06.722375546Z"
+    dependencies:
+    - alias: gateway-helm
+      name: gateway-helm
+      repository: oci://docker.io/envoyproxy
+      version: v1.2.2
+    description: Envoy Gateway (umbrella over the upstream chart). Kubernetes Gateway
+      API implementation.
+    digest: 60d0edbd506ce920929b58f6dab53bf9de8242a97c58f6b8917d6ed87c13a9d2
+    name: envoy-gateway
+    type: application
+    urls:
+    - https://github.com/Rashed00/eks-observability-helm-charts/releases/download/envoy-gateway-1.0.0/envoy-gateway-1.0.0.tgz
+    version: 1.0.0
+  external-secrets:
+  - apiVersion: v2
+    appVersion: 0.12.1
+    created: "2026-10-01T17:43:07.044006864Z"
+    dependencies:
+    - name: external-secrets
+      repository: https://charts.external-secrets.io
+      version: 0.12.1
+    description: External Secrets Operator.
+    digest: fe0582777425102ae77bb0f78bacb1ddacc58236cb88b7cf0a8b871d250018d3
+    name: external-secrets
+    type: application
+    urls:
+    - https://github.com/Rashed00/eks-observability-helm-charts/releases/download/external-secrets-1.0.0/external-secrets-1.0.0.tgz
+    version: 1.0.0
+  grafana:
+  - apiVersion: v2
+    appVersion: 10.3.1
+    created: "2026-10-01T17:43:07.304572105Z"
+    dependencies:
+    - name: grafana
+      repository: https://grafana.github.io/helm-charts
+      version: 10.3.1
+    description: Grafana (alternative to the operator-managed instance).
+    digest: 17402e61a30ed1e44c28b41855b06fc86f72c68cc588074bbbfdaecfd23fc13f
+    name: grafana
+    type: application
+    urls:
+    - https://github.com/Rashed00/eks-observability-helm-charts/releases/download/grafana-1.0.0/grafana-1.0.0.tgz
+    version: 1.0.0
+  grafana-operator:
+  - apiVersion: v2
+    appVersion: 5.21.1
+    created: "2026-10-01T17:43:07.560573995Z"
+    dependencies:
+    - name: grafana-operator
+      repository: oci://ghcr.io/grafana/helm-charts
+      version: 5.21.1
+    description: Grafana Operator.
+    digest: ede9790d4ef4a86b55ccae84ced81396f8836a8c9b192e279d5efb30fff963b8
+    name: grafana-operator
+    type: application
+    urls:
+    - https://github.com/Rashed00/eks-observability-helm-charts/releases/download/grafana-operator-1.0.0/grafana-operator-1.0.0.tgz
+    version: 1.0.0
+  kube-prometheus-stack:
+  - apiVersion: v2
+    appVersion: 80.4.1
+    created: "2026-10-01T17:43:07.895290496Z"
+    dependencies:
+    - name: kube-prometheus-stack
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 80.4.1
+    description: kube-prometheus-stack for the observability hub cluster.
+    digest: 208a37f1c90547363aaa1a7a269b064a71e30bc1779e99f45c8110eb16a17dd5
+    name: kube-prometheus-stack
+    type: application
+    urls:
+    - https://github.com/Rashed00/eks-observability-helm-charts/releases/download/kube-prometheus-stack-1.0.0/kube-prometheus-stack-1.0.0.tgz
+    version: 1.0.0
+  loki:
+  - apiVersion: v2
+    appVersion: 6.49.0
+    created: "2026-10-01T17:43:08.197562868Z"
+    dependencies:
+    - name: loki
+      repository: https://grafana.github.io/helm-charts
+      version: 6.49.0
+    description: Loki Simple Scalable deployment.
+    digest: 232f4416705f93a40ed9ee18a8e1374db3445fa0882e1f89aac1d4736c8fee08
+    name: loki
+    type: application
+    urls:
+    - https://github.com/Rashed00/eks-observability-helm-charts/releases/download/loki-1.0.0/loki-1.0.0.tgz
+    version: 1.0.0
+  metrics-server:
+  - apiVersion: v2
+    appVersion: 0.8.0
+    created: "2026-10-01T17:43:08.462042838Z"
+    dependencies:
+    - name: metrics-server
+      repository: https://kubernetes-sigs.github.io/metrics-server/
+      version: 3.13.0
+    description: Kubernetes Metrics Server (umbrella over the upstream chart).
+    digest: 5842f997e7079236557fd757b85da3bbbf7a323f15de14c2e2abba6fc0675688
+    name: metrics-server
+    type: application
+    urls:
+    - https://github.com/Rashed00/eks-observability-helm-charts/releases/download/metrics-server-1.0.0/metrics-server-1.0.0.tgz
+    version: 1.0.0
+  prometheus-operator-crds:
+  - apiVersion: v2
+    appVersion: v0.87.1
+    created: "2026-10-01T17:43:08.715078416Z"
+    dependencies:
+    - name: prometheus-operator-crds
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 16.0.0
+    description: Prometheus Operator CRDs (no values - install before kube-prometheus-stack).
+    digest: b9b3ee63c19970cf5ead7450c35a8bc86f42c8a5e9b47be530db6a76a3e3c551
+    name: prometheus-operator-crds
+    type: application
+    urls:
+    - https://github.com/Rashed00/eks-observability-helm-charts/releases/download/prometheus-operator-crds-1.0.0/prometheus-operator-crds-1.0.0.tgz
+    version: 1.0.0
+  tempo:
+  - apiVersion: v2
+    appVersion: 1.24.1
+    created: "2026-10-01T17:43:08.980843299Z"
+    dependencies:
+    - name: tempo
+      repository: https://grafana.github.io/helm-charts
+      version: 1.24.1
+    description: Tempo (monolithic mode) for the observability hub cluster.
+    digest: 3155beb756cd6275f6d7d93df29bcdae4f4de9f9ef3b01ec4474c6680f61bd7b
+    name: tempo
+    type: application
+    urls:
+    - https://github.com/Rashed00/eks-observability-helm-charts/releases/download/tempo-1.0.0/tempo-1.0.0.tgz
+    version: 1.0.0
+  thanos:
+  - apiVersion: v2
+    appVersion: 17.3.1
+    created: "2026-10-01T17:43:09.237533867Z"
+    dependencies:
+    - name: thanos
+      repository: https://charts.bitnami.com/bitnami
+      version: 17.3.1
+    description: Thanos query, store, compactor and query-frontend stack.
+    digest: e28e20fab135dcc39a0b3b3cb6199c83c3504c354a27c7d3ac1514666b41acb2
+    name: thanos
+    type: application
+    urls:
+    - https://github.com/Rashed00/eks-observability-helm-charts/releases/download/thanos-1.0.0/thanos-1.0.0.tgz
+    version: 1.0.0
+generated: "2026-10-01T17:43:09.237548164Z"
