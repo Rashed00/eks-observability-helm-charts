@@ -1,10 +1,5 @@
 loki:
   loki:
-    ruler:
-      storage:
-        s3:
-          bucketnames: ci-loki-ruler
-          region: eu-central-1
     storage:
       s3:
         region: eu-central-1
