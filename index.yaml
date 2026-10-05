@@ -3,6 +3,20 @@ entries:
   alloy:
   - apiVersion: v2
     appVersion: 1.5.0
+    created: "2026-10-05T14:35:37.835421834Z"
+    dependencies:
+    - name: alloy
+      repository: https://grafana.github.io/helm-charts
+      version: 1.5.0
+    description: Grafana Alloy for the observability hub cluster.
+    digest: e008879f1e5f04ac72eb748510558828fabe5a9b5b7e1caa1aa4f914b568dcd1
+    name: alloy
+    type: application
+    urls:
+    - https://github.com/Rashed00/eks-observability-helm-charts/releases/download/alloy-1.0.1/alloy-1.0.1.tgz
+    version: 1.0.1
+  - apiVersion: v2
+    appVersion: 1.5.0
     created: "2026-10-01T17:43:06.441512795Z"
     dependencies:
     - name: alloy
@@ -80,6 +94,20 @@ entries:
   kube-prometheus-stack:
   - apiVersion: v2
     appVersion: 80.4.1
+    created: "2026-10-05T14:35:38.144002886Z"
+    dependencies:
+    - name: kube-prometheus-stack
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 80.4.1
+    description: kube-prometheus-stack for the observability hub cluster.
+    digest: 23c2e6493a062056ca8e89654e5a00e6273bb215dc6262369e095bfadffd1a58
+    name: kube-prometheus-stack
+    type: application
+    urls:
+    - https://github.com/Rashed00/eks-observability-helm-charts/releases/download/kube-prometheus-stack-1.0.1/kube-prometheus-stack-1.0.1.tgz
+    version: 1.0.1
+  - apiVersion: v2
+    appVersion: 80.4.1
     created: "2026-10-01T17:43:07.895290496Z"
     dependencies:
     - name: kube-prometheus-stack
@@ -93,6 +121,20 @@ entries:
     - https://github.com/Rashed00/eks-observability-helm-charts/releases/download/kube-prometheus-stack-1.0.0/kube-prometheus-stack-1.0.0.tgz
     version: 1.0.0
   loki:
+  - apiVersion: v2
+    appVersion: 6.49.0
+    created: "2026-10-05T14:35:38.49095835Z"
+    dependencies:
+    - name: loki
+      repository: https://grafana.github.io/helm-charts
+      version: 6.49.0
+    description: Loki Simple Scalable deployment.
+    digest: b59d6cbd279810584139343beb76ee892a3255b7971f8779c52f08d63be1143f
+    name: loki
+    type: application
+    urls:
+    - https://github.com/Rashed00/eks-observability-helm-charts/releases/download/loki-1.0.1/loki-1.0.1.tgz
+    version: 1.0.1
   - apiVersion: v2
     appVersion: 6.49.0
     created: "2026-10-01T17:43:08.197562868Z"
@@ -167,4 +209,4 @@ entries:
     urls:
     - https://github.com/Rashed00/eks-observability-helm-charts/releases/download/thanos-1.0.0/thanos-1.0.0.tgz
     version: 1.0.0
-generated: "2026-10-01T17:43:09.237548164Z"
+generated: "2026-10-05T14:35:38.490980522Z"
