@@ -1,152 +1,213 @@
 # Grafana Alloy on the HUB cluster.
 #
+# IMPORTANT: this is an "umbrella" chart, so EVERYTHING below must sit under
+# the top-level `alloy:` key (the name of the upstream chart). The upstream
+# chart also has its own inner `alloy:` section, which is why you see
+# `alloy:` twice. Settings placed outside the outer `alloy:` are silently
+# ignored by Helm.
+#
 # Unified telemetry collector. On the hub, Alloy:
-#   - Scrapes its own pod metrics and forwards to Prometheus (in-cluster URL)
 #   - Tails pod logs and forwards to Loki (in-cluster URL)
 #   - Receives OTLP traces from apps and forwards to Tempo (in-cluster URL)
+#   - Scrapes its own metrics and forwards to Prometheus (in-cluster URL)
 #
 # Spoke clusters use a DIFFERENT alloy values file (in eks-observability-iac/
 # spoke-alloy-values/<spoke>/alloy-values.yaml) that targets the external
 # hub URLs with basic auth.
 
-controller:
-  type: daemonset
-
 alloy:
-  configMap:
-    create: true
-    content: |
-      // ====================================================================
-      // LOGS - scrape pod logs and push to Loki (in-cluster)
-      // ====================================================================
+  # One Alloy pod per node.
+  controller:
+    type: daemonset
 
-      discovery.kubernetes "pods" {
-        role = "pod"
-      }
+  alloy:
+    # Lets the Alloy pods split the work between themselves. Without this,
+    # EVERY pod would tail EVERY log and you would store each line N times.
+    clustering:
+      enabled: true
 
-      discovery.relabel "pods" {
-        targets = discovery.kubernetes.pods.targets
+    configMap:
+      create: true
+      content: |
+        // ====================================================================
+        // LOGS - read pod logs through the Kubernetes API and push to Loki
+        // ====================================================================
 
-        // Skip completed/failed pods
-        rule {
-          source_labels = ["__meta_kubernetes_pod_phase"]
-          regex         = "Pending|Succeeded|Failed|Completed"
-          action        = "drop"
+        discovery.kubernetes "pods" {
+          role = "pod"
         }
 
-        rule { source_labels = ["__meta_kubernetes_namespace"]              target_label = "namespace" }
-        rule { source_labels = ["__meta_kubernetes_pod_name"]               target_label = "pod" }
-        rule { source_labels = ["__meta_kubernetes_pod_container_name"]     target_label = "container" }
-        rule { source_labels = ["__meta_kubernetes_pod_node_name"]          target_label = "node" }
-        rule { source_labels = ["__meta_kubernetes_pod_label_app"]          target_label = "app" }
-        rule { source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"] target_label = "app" }
-      }
+        discovery.relabel "pods" {
+          targets = discovery.kubernetes.pods.targets
 
-      loki.source.kubernetes "pods" {
-        targets    = discovery.relabel.pods.output
-        forward_to = [loki.process.pods.receiver]
-      }
+          // Skip pods that are not running.
+          rule {
+            source_labels = ["__meta_kubernetes_pod_phase"]
+            regex         = "Pending|Succeeded|Failed|Unknown"
+            action        = "drop"
+          }
 
-      loki.process "pods" {
-        forward_to = [loki.write.default.receiver]
-        stage.static_labels {
-          values = {
-            cluster = "observability-cluster",
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label  = "namespace"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label  = "pod"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_container_name"]
+            target_label  = "container"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_node_name"]
+            target_label  = "node"
+          }
+
+          // `app` label: use the old-style "app" label first, then let the
+          // standard "app.kubernetes.io/name" label win if it exists.
+          // (.+) means "only copy when the value is not empty" - the old
+          // (.*) default would erase `app` for pods without the second label.
+          rule {
+            source_labels = ["__meta_kubernetes_pod_label_app"]
+            regex         = "(.+)"
+            target_label  = "app"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+            regex         = "(.+)"
+            target_label  = "app"
           }
         }
-      }
 
-      loki.write "default" {
-        endpoint {
-          url = "http://loki-gateway.observability.svc.cluster.local/loki/api/v1/push"
+        loki.source.kubernetes "pods" {
+          targets    = discovery.relabel.pods.output
+          forward_to = [loki.process.pods.receiver]
+
+          // Share the pods between the Alloy instances (see clustering above).
+          clustering {
+            enabled = true
+          }
         }
-      }
 
-      // ====================================================================
-      // TRACES - OTLP receiver, forward to Tempo (in-cluster)
-      // ====================================================================
+        loki.process "pods" {
+          forward_to = [loki.write.default.receiver]
 
-      otelcol.receiver.otlp "default" {
-        grpc { endpoint = "0.0.0.0:4317" }
-        http { endpoint = "0.0.0.0:4318" }
-
-        output {
-          traces  = [otelcol.processor.batch.default.input]
-          metrics = [otelcol.processor.batch.default.input]
+          stage.static_labels {
+            values = {
+              cluster = "observability-cluster",
+            }
+          }
         }
-      }
 
-      otelcol.processor.batch "default" {
-        timeout         = "10s"
-        send_batch_size = 1024
-
-        output {
-          traces  = [otelcol.processor.attributes.default.input]
-          metrics = [otelcol.exporter.prometheus.default.input]
+        loki.write "default" {
+          endpoint {
+            url = "http://loki-gateway.observability.svc.cluster.local/loki/api/v1/push"
+          }
         }
-      }
 
-      otelcol.processor.attributes "default" {
-        action {
-          key    = "cluster"
-          value  = "observability-cluster"
-          action = "upsert"
+        // ====================================================================
+        // TRACES - OTLP receiver, forward to Tempo (in-cluster)
+        // ====================================================================
+
+        otelcol.receiver.otlp "default" {
+          grpc {
+            endpoint = "0.0.0.0:4317"
+          }
+          http {
+            endpoint = "0.0.0.0:4318"
+          }
+
+          output {
+            traces  = [otelcol.processor.batch.default.input]
+            metrics = [otelcol.processor.batch.default.input]
+          }
         }
-        output {
-          traces = [otelcol.exporter.otlphttp.tempo.input]
+
+        otelcol.processor.batch "default" {
+          timeout         = "10s"
+          send_batch_size = 1024
+
+          output {
+            traces  = [otelcol.processor.attributes.default.input]
+            metrics = [otelcol.exporter.prometheus.default.input]
+          }
         }
-      }
 
-      otelcol.exporter.otlphttp "tempo" {
-        client {
-          endpoint = "http://tempo.observability.svc.cluster.local:4318"
+        otelcol.processor.attributes "default" {
+          action {
+            key    = "cluster"
+            value  = "observability-cluster"
+            action = "upsert"
+          }
+
+          output {
+            traces = [otelcol.exporter.otlphttp.tempo.input]
+          }
         }
-      }
 
-      otelcol.exporter.prometheus "default" {
-        forward_to = [prometheus.remote_write.default.receiver]
-      }
-
-      // ====================================================================
-      // METRICS - scrape Alloy's own metrics, push to Prometheus (in-cluster)
-      // ====================================================================
-
-      prometheus.scrape "alloy" {
-        targets = [{ __address__ = "127.0.0.1:12345" }]
-        forward_to = [prometheus.remote_write.default.receiver]
-        scrape_interval = "60s"
-      }
-
-      prometheus.remote_write "default" {
-        external_labels = {
-          cluster     = "observability-cluster",
-          environment = "production",
+        otelcol.exporter.otlphttp "tempo" {
+          client {
+            endpoint = "http://tempo.observability.svc.cluster.local:4318"
+          }
         }
-        endpoint {
-          url = "http://prometheus-operated.observability.svc.cluster.local:9090/api/v1/write"
+
+        otelcol.exporter.prometheus "default" {
+          forward_to = [prometheus.remote_write.default.receiver]
         }
-      }
 
-  extraPorts:
-    - { name: otlp-grpc, port: 4317, targetPort: 4317, protocol: TCP }
-    - { name: otlp-http, port: 4318, targetPort: 4318, protocol: TCP }
+        // ====================================================================
+        // METRICS - Alloy's own metrics, pushed to Prometheus (in-cluster)
+        // ====================================================================
 
-  resources:
-    requests: { cpu: 50m, memory: 256Mi }
-    limits:   { cpu: 500m, memory: 512Mi }
+        prometheus.scrape "alloy" {
+          targets         = [{ __address__ = "127.0.0.1:12345" }]
+          forward_to      = [prometheus.remote_write.default.receiver]
+          scrape_interval = "60s"
+        }
 
-  securityContext:
-    privileged: true
-    runAsUser: 0
+        prometheus.remote_write "default" {
+          external_labels = {
+            cluster     = "observability-cluster",
+            environment = "production",
+          }
 
-  mounts:
-    varlog: true
-    dockercontainers: true
+          endpoint {
+            url = "http://prometheus-operated.observability.svc.cluster.local:9090/api/v1/write"
+          }
+        }
 
-service:
-  enabled: true
-  type: ClusterIP
+    # Ports opened so apps can send traces to Alloy.
+    extraPorts:
+      - name: otlp-grpc
+        port: 4317
+        targetPort: 4317
+        protocol: TCP
+      - name: otlp-http
+        port: 4318
+        targetPort: 4318
+        protocol: TCP
 
-serviceMonitor:
-  enabled: true
-  interval: 60s
+    resources:
+      requests:
+        cpu: 50m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+    # Removed: `privileged: true`, `runAsUser: 0` and the host-folder mounts.
+    # Logs are read through the Kubernetes API (loki.source.kubernetes), so
+    # Alloy does not need root or access to the node's disk.
+
+  service:
+    enabled: true
+    type: ClusterIP
+
+  serviceMonitor:
+    enabled: true
+    interval: 60s
+    # kube-prometheus-stack only picks up ServiceMonitors that carry the
+    # label release=<its release name>. Our release is called "prometheus".
+    additionalLabels:
+      release: prometheus
