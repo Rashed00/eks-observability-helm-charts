@@ -20,6 +20,11 @@ kube-prometheus-stack:
       retentionSize: "10GB"
       enableRemoteWriteReceiver: true
 
+      ruleSelectorNilUsesHelmValues: false
+      serviceMonitorSelectorNilUsesHelmValues: false
+      podMonitorSelectorNilUsesHelmValues: false
+      probeSelectorNilUsesHelmValues: false
+
       externalLabels:
         cluster: observability
         environment: production

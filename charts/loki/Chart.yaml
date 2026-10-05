@@ -2,7 +2,7 @@ apiVersion: v2
 name: loki
 description: Loki Simple Scalable deployment.
 type: application
-version: 1.0.0
+version: 1.0.1
 appVersion: "6.49.0"
 dependencies:
   - name: loki
