@@ -15,7 +15,7 @@ gateway-helm:
       gateway:
         controllerName: gateway.envoyproxy.io/gatewayclass-controller
       provider:
-        type: kubernetes
+        type: Kubernetes
       logging:
         level:
           default: info
