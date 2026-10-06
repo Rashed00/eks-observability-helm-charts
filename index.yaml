@@ -65,6 +65,20 @@ entries:
   external-secrets:
   - apiVersion: v2
     appVersion: 0.12.1
+    created: "2026-10-06T08:12:58.629254447Z"
+    dependencies:
+    - name: external-secrets
+      repository: https://charts.external-secrets.io
+      version: 0.12.1
+    description: External Secrets Operator.
+    digest: 5fb18318579f89b30a2598d73dee48e155a8aeae97a42947020bef6a47106054
+    name: external-secrets
+    type: application
+    urls:
+    - https://github.com/Rashed00/eks-observability-helm-charts/releases/download/external-secrets-1.0.1/external-secrets-1.0.1.tgz
+    version: 1.0.1
+  - apiVersion: v2
+    appVersion: 0.12.1
     created: "2026-10-01T17:43:07.044006864Z"
     dependencies:
     - name: external-secrets
@@ -78,6 +92,20 @@ entries:
     - https://github.com/Rashed00/eks-observability-helm-charts/releases/download/external-secrets-1.0.0/external-secrets-1.0.0.tgz
     version: 1.0.0
   grafana:
+  - apiVersion: v2
+    appVersion: 10.3.1
+    created: "2026-10-06T08:12:58.7836586Z"
+    dependencies:
+    - name: grafana
+      repository: https://grafana.github.io/helm-charts
+      version: 10.3.1
+    description: Grafana (alternative to the operator-managed instance).
+    digest: 5269b05ebf01a0a6f7aecf57813e95b305f5a526385871d68dd5e3583842802a
+    name: grafana
+    type: application
+    urls:
+    - https://github.com/Rashed00/eks-observability-helm-charts/releases/download/grafana-1.0.1/grafana-1.0.1.tgz
+    version: 1.0.1
   - apiVersion: v2
     appVersion: 10.3.1
     created: "2026-10-01T17:43:07.304572105Z"
@@ -110,6 +138,20 @@ entries:
   kube-prometheus-stack:
   - apiVersion: v2
     appVersion: 80.4.1
+    created: "2026-10-06T08:12:58.999094549Z"
+    dependencies:
+    - name: kube-prometheus-stack
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 80.4.1
+    description: kube-prometheus-stack for the observability hub cluster.
+    digest: 57a7ea8eb997f4d8a47d00b914d768ddea93476c6ffca2bf663a958b2f935b8f
+    name: kube-prometheus-stack
+    type: application
+    urls:
+    - https://github.com/Rashed00/eks-observability-helm-charts/releases/download/kube-prometheus-stack-1.0.2/kube-prometheus-stack-1.0.2.tgz
+    version: 1.0.2
+  - apiVersion: v2
+    appVersion: 80.4.1
     created: "2026-10-05T14:35:38.144002886Z"
     dependencies:
     - name: kube-prometheus-stack
@@ -137,6 +179,20 @@ entries:
     - https://github.com/Rashed00/eks-observability-helm-charts/releases/download/kube-prometheus-stack-1.0.0/kube-prometheus-stack-1.0.0.tgz
     version: 1.0.0
   loki:
+  - apiVersion: v2
+    appVersion: 6.49.0
+    created: "2026-10-06T08:12:59.150071759Z"
+    dependencies:
+    - name: loki
+      repository: https://grafana.github.io/helm-charts
+      version: 6.49.0
+    description: Loki Simple Scalable deployment.
+    digest: 48d4be5b9a76ff9382176334651ed2b0c798747a1bb7c5f8dc69f7a731df09ec
+    name: loki
+    type: application
+    urls:
+    - https://github.com/Rashed00/eks-observability-helm-charts/releases/download/loki-1.0.2/loki-1.0.2.tgz
+    version: 1.0.2
   - apiVersion: v2
     appVersion: 6.49.0
     created: "2026-10-05T14:35:38.49095835Z"
@@ -198,6 +254,20 @@ entries:
   tempo:
   - apiVersion: v2
     appVersion: 1.24.1
+    created: "2026-10-06T08:12:59.313955766Z"
+    dependencies:
+    - name: tempo
+      repository: https://grafana.github.io/helm-charts
+      version: 1.24.1
+    description: Tempo (monolithic mode) for the observability hub cluster.
+    digest: e63d8f0e54f392e4d470f6366a66faf9b165895fc9aa98861815bb39c25734ca
+    name: tempo
+    type: application
+    urls:
+    - https://github.com/Rashed00/eks-observability-helm-charts/releases/download/tempo-1.0.1/tempo-1.0.1.tgz
+    version: 1.0.1
+  - apiVersion: v2
+    appVersion: 1.24.1
     created: "2026-10-01T17:43:08.980843299Z"
     dependencies:
     - name: tempo
@@ -213,6 +283,20 @@ entries:
   thanos:
   - apiVersion: v2
     appVersion: 17.3.1
+    created: "2026-10-06T08:12:59.538790903Z"
+    dependencies:
+    - name: thanos
+      repository: https://charts.bitnami.com/bitnami
+      version: 17.3.1
+    description: Thanos query, store, compactor and query-frontend stack.
+    digest: 47fe96caeaaa7c17e287d9624e41a8e44a86d7d2f5170125424f83adba3f16bf
+    name: thanos
+    type: application
+    urls:
+    - https://github.com/Rashed00/eks-observability-helm-charts/releases/download/thanos-1.0.1/thanos-1.0.1.tgz
+    version: 1.0.1
+  - apiVersion: v2
+    appVersion: 17.3.1
     created: "2026-10-01T17:43:09.237533867Z"
     dependencies:
     - name: thanos
@@ -225,4 +309,4 @@ entries:
     urls:
     - https://github.com/Rashed00/eks-observability-helm-charts/releases/download/thanos-1.0.0/thanos-1.0.0.tgz
     version: 1.0.0
-generated: "2026-10-05T20:08:33.02510426Z"
+generated: "2026-10-06T08:12:59.538812584Z"
