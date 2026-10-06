@@ -8,7 +8,7 @@ tempo:
       trace:
         backend: s3
         s3:
-          bucket: observability-cluster-tempo-000000000000
+          bucket: observability-cluster-tempo-777000838881
           endpoint: s3.eu-central-1.amazonaws.com
           region: eu-central-1
           insecure: false
@@ -32,7 +32,7 @@ tempo:
   serviceAccount:
     create: true
     annotations:
-      eks.amazonaws.com/role-arn: "arn:aws:iam::000000000000:role/observability-cluster-tempo"
+      eks.amazonaws.com/role-arn: "arn:aws:iam::777000838881:role/observability-cluster-tempo"
 
   resources:
     requests: { cpu: 200m, memory: 512Mi }

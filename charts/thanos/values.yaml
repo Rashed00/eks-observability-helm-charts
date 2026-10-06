@@ -12,7 +12,7 @@ thanos:
   objstoreConfig:
     type: S3
     config:
-      bucket: observability-cluster-thanos-000000000000
+      bucket: observability-cluster-thanos-777000838881
       endpoint: s3.eu-central-1.amazonaws.com
       region: eu-central-1
       insecure: false
@@ -23,7 +23,7 @@ thanos:
     serviceAccount:
       create: true
       annotations:
-        eks.amazonaws.com/role-arn: "arn:aws:iam::000000000000:role/observability-cluster-thanos"
+        eks.amazonaws.com/role-arn: "arn:aws:iam::777000838881:role/observability-cluster-thanos"
     dnsDiscovery:
       enabled: true
       sidecarsService: prometheus-operated
@@ -43,7 +43,7 @@ thanos:
     serviceAccount:
       create: true
       annotations:
-        eks.amazonaws.com/role-arn: "arn:aws:iam::000000000000:role/observability-cluster-thanos"
+        eks.amazonaws.com/role-arn: "arn:aws:iam::777000838881:role/observability-cluster-thanos"
     persistence:
       enabled: true
       storageClass: gp3
@@ -58,7 +58,7 @@ thanos:
     serviceAccount:
       create: true
       annotations:
-        eks.amazonaws.com/role-arn: "arn:aws:iam::000000000000:role/observability-cluster-thanos"
+        eks.amazonaws.com/role-arn: "arn:aws:iam::777000838881:role/observability-cluster-thanos"
     retentionResolutionRaw: 14d
     retentionResolution5m: 90d
     retentionResolution1h: 730d
@@ -102,7 +102,7 @@ thanos:
     serviceAccount:
       create: true
       annotations:
-        eks.amazonaws.com/role-arn: "arn:aws:iam::000000000000:role/observability-cluster-thanos"
+        eks.amazonaws.com/role-arn: "arn:aws:iam::777000838881:role/observability-cluster-thanos"
     resources:
       requests: { cpu: 25m, memory: 64Mi }
       limits:   { cpu: 200m, memory: 256Mi }
@@ -116,4 +116,4 @@ thanos:
   serviceAccount:
     create: true
     annotations:
-      eks.amazonaws.com/role-arn: "arn:aws:iam::000000000000:role/observability-cluster-thanos"
+      eks.amazonaws.com/role-arn: "arn:aws:iam::777000838881:role/observability-cluster-thanos"

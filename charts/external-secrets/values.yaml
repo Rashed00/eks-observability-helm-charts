@@ -9,7 +9,7 @@ external-secrets:
     create: true
     name: external-secrets
     annotations:
-      eks.amazonaws.com/role-arn: "arn:aws:iam::000000000000:role/observability-cluster-external-secrets"
+      eks.amazonaws.com/role-arn: "arn:aws:iam::777000838881:role/observability-cluster-external-secrets"
 
   replicaCount: 1
   resources:

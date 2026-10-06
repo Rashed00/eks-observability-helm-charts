@@ -6,7 +6,7 @@
 # path, ArgoCD does NOT install this chart - it installs grafana-operator
 # instead and the Grafana CR provisions the same workload.
 #
-# Replace monitoring.example.com and the dummy AWS account ID before release.
+# Replace monitoring.relsayed.online and the dummy AWS account ID before release.
 
 grafana:
   replicas: 1
@@ -80,8 +80,8 @@ grafana:
 
   grafana.ini:
     server:
-      root_url: "https://grafana.monitoring.example.com"
-      domain: "grafana.monitoring.example.com"
+      root_url: "https://grafana.monitoring.relsayed.online"
+      domain: "grafana.monitoring.relsayed.online"
     feature_toggles:
       enable: traceqlEditor correlations
     unified_alerting:

@@ -36,8 +36,8 @@ loki:
     storage:
       type: s3
       bucketNames:
-        chunks: observability-cluster-loki-chunks-000000000000
-        ruler: observability-cluster-loki-ruler-000000000000
+        chunks: observability-cluster-loki-chunks-777000838881
+        ruler: observability-cluster-loki-ruler-777000838881
       s3:
         region: eu-central-1
         insecure: false
@@ -130,4 +130,4 @@ loki:
   serviceAccount:
     create: true
     annotations:
-      eks.amazonaws.com/role-arn: "arn:aws:iam::000000000000:role/observability-cluster-loki"
+      eks.amazonaws.com/role-arn: "arn:aws:iam::777000838881:role/observability-cluster-loki"

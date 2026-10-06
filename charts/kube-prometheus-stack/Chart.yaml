@@ -2,7 +2,7 @@ apiVersion: v2
 name: kube-prometheus-stack
 description: kube-prometheus-stack for the observability hub cluster.
 type: application
-version: 1.0.1
+version: 1.0.2
 appVersion: "80.4.1"
 dependencies:
   - name: kube-prometheus-stack
