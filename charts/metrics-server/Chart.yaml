@@ -2,7 +2,7 @@ apiVersion: v2
 name: metrics-server
 description: Kubernetes Metrics Server (umbrella over the upstream chart).
 type: application
-version: 1.0.2
+version: 1.0.3
 appVersion: "0.8.0"
 dependencies:
   - name: metrics-server
