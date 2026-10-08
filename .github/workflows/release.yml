@@ -22,6 +22,11 @@ name: Release charts
 # Run by hand (Actions -> Release charts -> Run workflow) it skips the bump and
 # just publishes any chart whose version is not released yet.
 
+# Hello Rashed and Gerges and welcome to the eks-observability-helm-charts repo! This workflow is a bit complex, so here is a quick overview of what it does:
+#
+# 1. It runs on every push to the main branch that changes a chart in the charts/ directory.
+# 2. It checks the labels of the merged PR to determine the bump
+
 on:
   push:
     branches: [main]
