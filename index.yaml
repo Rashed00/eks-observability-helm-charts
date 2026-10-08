@@ -269,6 +269,20 @@ entries:
   prometheus-operator-crds:
   - apiVersion: v2
     appVersion: v0.87.1
+    created: "2026-10-08T20:16:51.094951571Z"
+    dependencies:
+    - name: prometheus-operator-crds
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 16.0.0
+    description: Prometheus Operator CRDs (no values - install before kube-prometheus-stack).
+    digest: b2e08078db76df50d6a170c0b6d4f6623abdb780240a9943d3a2664283ac0f27
+    name: prometheus-operator-crds
+    type: application
+    urls:
+    - https://github.com/Rashed00/eks-observability-helm-charts/releases/download/prometheus-operator-crds-1.0.2/prometheus-operator-crds-1.0.2.tgz
+    version: 1.0.2
+  - apiVersion: v2
+    appVersion: v0.87.1
     created: "2026-10-08T20:10:26.808140489Z"
     dependencies:
     - name: prometheus-operator-crds
@@ -353,4 +367,4 @@ entries:
     urls:
     - https://github.com/Rashed00/eks-observability-helm-charts/releases/download/thanos-1.0.0/thanos-1.0.0.tgz
     version: 1.0.0
-generated: "2026-10-08T20:10:26.808172163Z"
+generated: "2026-10-08T20:16:51.094972893Z"
