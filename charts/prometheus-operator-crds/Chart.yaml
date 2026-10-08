@@ -8,3 +8,4 @@ dependencies:
   - name: prometheus-operator-crds
     version: "16.0.0"
     repository: "https://prometheus-community.github.io/helm-charts"
+# comment hello from the first try 
