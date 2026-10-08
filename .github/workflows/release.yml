@@ -1,16 +1,26 @@
 name: Release charts
 
-# Packages and publishes charts to a GitHub Pages-hosted Helm repo when a
-# chart's version is bumped on main.
+# On every push to main that changes a chart:
+#   1. bump    - bump that chart's version in Chart.yaml and commit it to main
+#                (patch by default; a "minor" or "major" label on the merged PR
+#                picks a bigger bump; a version you already bumped by hand is kept)
+#   2. release - package and publish the chart to the GitHub Pages Helm repo
+#   3. notify  - tell the gitops repo, which sets the new targetRevision
+#
+# Bump and release are in one workflow on purpose: a commit pushed by the bot
+# with GITHUB_TOKEN does not start other workflows, so a separate bump workflow
+# would never trigger the release. It also means the bot's commit cannot loop.
 #
 # Setup steps (one-time):
 #   1. Settings -> Pages -> Source: "Deploy from a branch" -> branch: "gh-pages"
 #   2. Settings -> Actions -> General -> Workflow permissions: "Read and write"
+#   3. Settings -> Secrets and variables -> Actions -> New repository secret:
+#        GITOPS_DISPATCH_TOKEN = fine-grained token with access to
+#        eks-observability-gitops only, permission "Contents: Read and write"
+#   4. Create the PR labels "minor" and "major" (optional, patch is the default)
 #
-# After the first successful release:
-#   helm repo add eks-observability https://<owner>.github.io/eks-observability-helm-charts
-#   helm repo update
-#   helm search repo eks-observability
+# Run by hand (Actions -> Release charts -> Run workflow) it skips the bump and
+# just publishes any chart whose version is not released yet.
 
 on:
   push:
@@ -21,8 +31,17 @@ on:
 
 permissions:
   contents: write
+  pull-requests: read
   pages: write
   id-token: write
+
+# One release at a time, so two quick pushes cannot bump the same chart twice.
+concurrency:
+  group: release-charts
+  cancel-in-progress: false
+
+env:
+  GITOPS_REPO: Rashed00/eks-observability-gitops
 
 jobs:
   release:
@@ -37,6 +56,65 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+      # ---------------------------------------------------------------------
+      # 1. bump
+      # ---------------------------------------------------------------------
+      - name: Pick bump size from the merged PR's labels
+        id: size
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          labels="$(gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/pulls" \
+            --jq '.[0].labels // [] | map(.name) | join(" ")' 2>/dev/null || true)"
+          bump="patch"
+          if   [[ " ${labels} " == *" major "* ]]; then bump="major"
+          elif [[ " ${labels} " == *" minor "* ]]; then bump="minor"
+          fi
+          echo "PR labels: ${labels:-none} -> ${bump} bump"
+          echo "bump=${bump}" >> "$GITHUB_OUTPUT"
+
+      - name: Bump changed charts
+        id: bump
+        if: github.event_name == 'push'
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          if [[ -z "${BEFORE}" || "${BEFORE}" =~ ^0+$ ]]; then
+            echo "No previous commit to compare with, skipping the bump."
+            exit 0
+          fi
+          chmod +x scripts/ci/bump-changed-charts.sh
+          scripts/ci/bump-changed-charts.sh "${BEFORE}" "${{ github.sha }}" "${{ steps.size.outputs.bump }}" \
+            > /tmp/released.txt
+          echo "Charts to release:"; cat /tmp/released.txt
+          {
+            echo 'released<<EOF'
+            cat /tmp/released.txt
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Commit and push the bump
+        if: github.event_name == 'push'
+        run: |
+          if git diff --quiet -- charts/; then
+            echo "Nothing to commit (no bump needed)."
+            exit 0
+          fi
+          git add charts/*/Chart.yaml
+          msg="chore(release): bump $(git diff --cached --name-only | awk -F/ '{print $2}' | paste -sd, -) [skip ci]"
+          git commit -m "${msg}"
+          for i in 1 2 3; do
+            if git push origin HEAD:main; then exit 0; fi
+            echo "Push rejected (main moved). Rebasing and retrying (${i}/3)..."
+            git pull --rebase origin main
+          done
+          echo "::error::Could not push the version bump to main. Is main protected?"
+          exit 1
+
+      # ---------------------------------------------------------------------
+      # 2. release
+      # ---------------------------------------------------------------------
       - uses: azure/setup-helm@v4
         with:
           version: '3.16.4'
@@ -48,3 +126,40 @@ jobs:
           skip_existing: true
         env:
           CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ---------------------------------------------------------------------
+      # 3. notify gitops
+      # ---------------------------------------------------------------------
+      - name: Tell the gitops repo about the new versions
+        if: github.event_name == 'push' && steps.bump.outputs.released != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITOPS_DISPATCH_TOKEN }}
+          RELEASED: ${{ steps.bump.outputs.released }}
+        run: |
+          if [[ -z "${GH_TOKEN}" ]]; then
+            echo "::warning::GITOPS_DISPATCH_TOKEN is not set, so the gitops repo was not told. Update targetRevision by hand."
+            exit 0
+          fi
+          while read -r chart version; do
+            [[ -n "${chart}" ]] || continue
+            echo "Sending: ${chart} ${version}"
+            jq -n --arg c "${chart}" --arg v "${version}" --arg s "${{ github.sha }}" \
+              '{event_type: "chart-released", client_payload: {chart: $c, version: $v, source_sha: $s}}' \
+              | gh api "repos/${GITOPS_REPO}/dispatches" --input -
+          done <<< "${RELEASED}"
+
+      - name: Summary
+        if: always()
+        env:
+          RELEASED: ${{ steps.bump.outputs.released }}
+        run: |
+          {
+            echo "### Chart release"
+            if [[ -n "${RELEASED}" ]]; then
+              echo "| chart | version |"
+              echo "|---|---|"
+              while read -r c v; do [[ -n "$c" ]] && echo "| $c | $v |"; done <<< "${RELEASED}"
+            else
+              echo "No chart versions bumped in this run."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
