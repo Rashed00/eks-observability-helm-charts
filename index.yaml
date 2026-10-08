@@ -240,6 +240,20 @@ entries:
   metrics-server:
   - apiVersion: v2
     appVersion: 0.8.0
+    created: "2026-10-08T19:56:45.275167123Z"
+    dependencies:
+    - name: metrics-server
+      repository: https://kubernetes-sigs.github.io/metrics-server/
+      version: 3.13.0
+    description: Kubernetes Metrics Server (umbrella over the upstream chart).
+    digest: 54e2fb9d91706acb7a20abb82980f26beae25b888155fc27507d5813887e3418
+    name: metrics-server
+    type: application
+    urls:
+    - https://github.com/Rashed00/eks-observability-helm-charts/releases/download/metrics-server-1.0.1/metrics-server-1.0.1.tgz
+    version: 1.0.1
+  - apiVersion: v2
+    appVersion: 0.8.0
     created: "2026-10-01T17:43:08.462042838Z"
     dependencies:
     - name: metrics-server
@@ -325,4 +339,4 @@ entries:
     urls:
     - https://github.com/Rashed00/eks-observability-helm-charts/releases/download/thanos-1.0.0/thanos-1.0.0.tgz
     version: 1.0.0
-generated: "2026-10-06T18:40:10.464857275Z"
+generated: "2026-10-08T19:56:45.275198823Z"
