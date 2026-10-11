@@ -63,7 +63,11 @@ the right answer is `charts/loki/values-staging.yaml` *next to*
 
 `Chart.yaml` has two version fields:
 
-- `version` — the **umbrella chart** version. Bump on every change.
+- `version` — the **umbrella chart** version. Bumped automatically by
+  `release.yml` on every push to main that changes the chart (patch by
+  default; add a `minor` or `major` label to the PR for a bigger bump).
+  A version you bump by hand is kept. After release, the gitops repo is
+  told and sets the matching `targetRevision` itself.
 - `appVersion` — informational; tracks the upstream's app version.
 
 Plus the pinned upstream dep:
